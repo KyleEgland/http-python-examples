@@ -56,9 +56,23 @@ def validate_url(url):
         )
 
 
-def send_http_req(url, method):
+def send_http_req(url, method, file_path=None):
     logger.info(f"Sending {method} request to {url}")
-    response = requests.request(method, url)
+    if file_path:
+        try:
+            # Open file in binary mode for reading
+            with open(file_path, "rb") as file:
+                attachment = {"file": (file_path, file)}
+                # Send POST request
+                response = requests.request(method, url, files=attachment, data=payload)
+        except FileNotFoundError:
+            logger.critical(f"File not found: {file_path}")
+            quit()
+        except Exception as e:
+            logger.critical(f"An error occurred: {str(e)}")
+            quit()
+    else:
+        response = requests.request(method, url)
     if 200 <= response.status_code < 300:
         logger.info(f"SUCCESS, received status code {response.status_code}")
         return
@@ -84,11 +98,20 @@ def main():
     )
 
     parser.add_argument(
-        "-h, --httpreq",
+        "-p, --httpreq",
         default="get",
         dest="httpreq",
         help="HTTP request type, e.g., GET. Defaults to GET",
         metavar="HTTP_Request_Type",
+        type=str,
+    )
+
+    parser.add_argument(
+        "-f, --filepath",
+        default=None,
+        dest="filepath",
+        help="Payload to send to server in HTTP POST request",
+        metavar="File_path",
         type=str,
     )
 

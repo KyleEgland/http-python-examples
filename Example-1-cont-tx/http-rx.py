@@ -44,10 +44,27 @@ def validate_ip_address(ip_str):
 
 
 # Define a custom request handler that logs requests
-class RequestHandler(http.server.SimpleHTTPRequestHandler):
+class RequestHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         # Log the request with a timestamp
         logger.info("%s - %s" % (self.address_string(), format % args))
+    
+    def do_GET(self):
+        # Handle GET requests
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(b"Hello, GET request!")
+
+    def do_POST(self):
+        # Handle POST requests
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(b"Hello, POST request!")
 
 
 def main():
